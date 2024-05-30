@@ -1,10 +1,10 @@
 package main
 
 import (
-	"encoding/json"
 	"fmt"
 	"go_sp/database"
 	"go_sp/models"
+	"go_sp/utils"
 	"log"
 	"sync"
 	"time"
@@ -29,11 +29,6 @@ func main() {
 	}()
 	wg.Wait()
 
-	fmt.Println(ConvertToJson(facturas))
+	fmt.Println(utils.ConvertToJson((facturas)))
 	fmt.Println("Consulta de facturas tomó:", time.Since(start))
-}
-
-func ConvertToJson(contenedorFacturas []models.Factura) string {
-	jsonFactura, _ := json.Marshal(contenedorFacturas)
-	return string(jsonFactura)
 }
