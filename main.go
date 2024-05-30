@@ -61,36 +61,33 @@ func main() {
 	}
 
 	// Migrar el esquema
-	db.AutoMigrate(&Factura{}, &Detalle{})
+	// db.AutoMigrate(&Factura{}, &Detalle{})
 
-	// Utilizamos WaitGroup para sincronizar las goroutines
+	// Consultar las facturas con sus detalles de manera concurrente
+	var facturas []Factura
+	start := time.Now()
+
+	// Consulta concurrente de facturas
 	var wg sync.WaitGroup
-
-	// Añadimos 1 al WaitGroup
 	wg.Add(1)
-
-	// Lanzamos una goroutine para consultar las facturas con sus detalles
 	go func() {
-		defer wg.Done() // Debe llamarse a wg.Done() cuando la goroutine haya terminado
-
-		// Consultar las facturas con sus detalles
-		var facturas []Factura
+		defer wg.Done()
 		result := db.Preload("Detalle").Find(&facturas)
 		if result.Error != nil {
 			log.Fatal("failed to query invoices: ", result.Error)
 		}
-
-		// Imprimir las facturas con sus detalles
-		for _, factura := range facturas {
-			fmt.Printf("Factura ID: %d, Facturaproforma: %d\n", factura.ID, factura.Facturaproforma)
-			for _, detalle := range factura.Detalle {
-				fmt.Printf("  Detalle ID: %d, ItemFactura: %d, Producto: %s\n", detalle.ID, detalle.ItemFactura, detalle.IdproducoMaestro)
-			}
-		}
 	}()
 
-	// Esperar a que todas las goroutines terminen
 	wg.Wait()
+	fmt.Println("Consulta de facturas tomó:", time.Since(start))
+
+	// Imprimir las facturas con sus detalles
+	for _, factura := range facturas {
+		fmt.Printf("Factura ID: %d, Facturaproforma: %d\n", factura.ID, factura.Facturaproforma)
+		for _, detalle := range factura.Detalle {
+			fmt.Printf("  Detalle ID: %d, ItemFactura: %d, Producto: %s\n", detalle.ID, detalle.ItemFactura, detalle.IdproducoMaestro)
+		}
+	}
 
 	// registerDummyData(db)
 }
